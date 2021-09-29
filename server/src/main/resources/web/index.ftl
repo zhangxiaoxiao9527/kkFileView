@@ -51,6 +51,22 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <h4 class="panel-title">
+                <a data-toggle="collapse" data-parent="#accordion">
+                    输入下载地址预览文件
+                </a>
+            </h4>
+        </div>
+        <div class="panel-body">
+            <label>文件下载地址：<input type="text" id="_url" style="min-width:50em"/></label>
+            <form action="${baseUrl}onlinePreview" target="_blank" id="preview_by_url" style="display: inline-block">
+                <input type="hidden" name="url"/>
+                <input type="submit" value="预览">
+            </form>
+        </div>
+    </div>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title">
                 <a data-toggle="collapse" data-parent="#accordion"
                    href="#collapseTwo">
                     预览测试
@@ -58,12 +74,14 @@
             </h4>
         </div>
         <div class="panel-body">
-            <div style="padding: 10px">
-                <form enctype="multipart/form-data" id="fileUpload">
-                    <input type="file" name="file"/>
-                    <input type="button" id="btnSubmit" value=" 上 传 "/>
-                </form>
-            </div>
+            <#if fileUploadDisable == false>
+                <div style="padding: 10px">
+                    <form enctype="multipart/form-data" id="fileUpload">
+                        <input type="file" name="file"/>
+                        <input type="button" id="btnSubmit" value=" 上 传 "/>
+                    </form>
+                </div>
+            </#if>
             <div>
                 <table id="table" data-pagination="true"></table>
             </div>
@@ -79,6 +97,24 @@
         </div>
         <div class="panel-body">
             <div>
+
+                2021年7月6日，v4.0.0 版本 :<br>
+                1. 底层集成OpenOffice替换为LibreOffice，Office文件兼容性增强，预览效果提升<br>
+                2. 修复压缩文件目录穿越漏洞<br>
+                3. 修复PPT预览使用PDF模式无效<br>
+                4. 修复PPT图片预览模式前端显示异常<br>
+                5. 新增功能：首页文件上传功能可通过配置实时开启或禁用<br>
+                6. 优化增加Office进程关闭日志<br>
+                7. 优化Windows环境下，查找Office组件逻辑(内置的LibreOffice优先)<br>
+                8. 优化启动Office进程改同步执行<br><br>
+
+                2021年6月17日，v3.6.0版本 ：<br>
+                ofd 类型文件支持版本，本次版本重要功能均由社区开发贡献，感谢 @gaoxingzaq、@zhangxiaoxiao9527 的代码贡献<br>
+                1、新增 ofd 类型文件预览支持，ofd 是国产的类似 pdf 格式的文件<br>
+                2、新增了 ffmpeg 视频文件转码预览支持，打开转码功能后，理论上支持所有主流视频的预览，如 rm、rmvb、flv 等<br>
+                3、美化了 ppt、pptx 类型文件预览效果，比之前版本好看太多<br>
+                4、更新了 pdfbox、xstream、common-io 等依赖的版本<br><br>
+
                 2021年1月28日 ：<br>
                 2020农历年最后一个版本发布，主要包含了部分 UI 改进，和解决了 QQ 群友、 Issue 里反馈的 Bug 修复，最最重要的是发个新版，过个好年<br>
                 1、引入galimatias,解决不规范文件名导致文件下载异常<br>
@@ -238,12 +274,18 @@
             return data;
         });
 
+        $('#preview_by_url').submit(function() {
+            var _url = $("#_url").val();
+            var urlField = $(this).find('[name=url]');
+            var b64Encoded = Base64.encode(_url);
+            urlField.val(b64Encoded);
+        });
+
 
         function showLoadingDiv() {
             var height = window.document.documentElement.clientHeight - 1;
             $(".loading_container").css("height", height).show();
         }
-
         $("#btnSubmit").click(function () {
             showLoadingDiv();
             $("#fileUpload").ajaxSubmit({

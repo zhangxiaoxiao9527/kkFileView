@@ -7,7 +7,7 @@
     <parent>
         <artifactId>filepreview</artifactId>
         <groupId>cn.keking</groupId>
-        <version>3.5.1</version>
+        <version>4.0.0</version>
     </parent>
 
     <artifactId>office-plugin</artifactId>
@@ -24,7 +24,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>1.4</version>
+            <version>2.7</version>
         </dependency>
         <dependency>
             <groupId>org.openoffice</groupId>
@@ -85,16 +85,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.3.2</version>
-                <configuration>
-                    <source>1.6</source>
-                    <target>1.6</target>
-                    <encoding>UTF-8</encoding>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
