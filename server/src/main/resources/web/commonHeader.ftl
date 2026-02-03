@@ -1,11 +1,6 @@
-
-
-<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css"/>
-<script src="js/jquery-3.0.0.min.js" type="text/javascript"></script>
-<script src="js/jquery.form.min.js" type="text/javascript"></script>
-<script src="bootstrap/js/bootstrap.min.js" type="text/javascript"></script>
+<#setting classic_compatible=true>
+<link rel="icon" href="./favicon.ico" type="image/x-icon">
 <script src="js/watermark.js" type="text/javascript"></script>
-<script src="js/base64.min.js" type="text/javascript"></script>
 
 <script>
     /**
@@ -13,7 +8,19 @@
      */
     function initWaterMark() {
         let watermarkTxt = '${watermarkTxt}';
-        if (watermarkTxt !== '') {
+        if (watermarkTxt === '') {
+            return;
+        }
+        let lastWidth = 0;
+        let lastHeight = 0;
+        const checkResize = () => {
+            const currentWidth = document.documentElement.scrollWidth;
+            const currentHeight = document.documentElement.scrollHeight;
+            // 检测尺寸是否变化
+            if (currentWidth === lastWidth && currentHeight === lastHeight) {
+                return;
+            }
+            // 如果变化了, 重新初始化水印
             watermark.init({
                 watermark_txt: '${watermarkTxt}',
                 watermark_x: 0,
@@ -30,10 +37,14 @@
                 watermark_height: ${watermarkHeight},
                 watermark_angle: ${watermarkAngle},
             });
-        }
+            // 更新存储的宽口大小
+            lastWidth = currentWidth;
+            lastHeight = currentHeight;
+        };
+        setInterval(checkResize, 1000);
     }
-
 </script>
+
 <style>
     * {
         margin: 0;
@@ -44,6 +55,4 @@
         height: 100%;
         width: 100%;
     }
-
 </style>
-

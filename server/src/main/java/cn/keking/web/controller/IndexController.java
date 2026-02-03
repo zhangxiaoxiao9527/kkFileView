@@ -1,8 +1,7 @@
 package cn.keking.web.controller;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
 
 /**
  *  页面跳转
@@ -12,13 +11,30 @@ import org.springframework.web.bind.annotation.RequestMethod;
 @Controller
 public class IndexController {
 
-    @RequestMapping(value = "/index", method = RequestMethod.GET)
+    @GetMapping( "/index")
     public String go2Index(){
-        return "index";
+        return "/main/index";
     }
 
-    @RequestMapping(value = "/", method = RequestMethod.GET)
-    public String root() {
-        return "redirect:/index";
+    @GetMapping( "/record")
+    public String go2Record(){
+        return "/main/record";
     }
+
+    @GetMapping( "/sponsor")
+    public String go2Sponsor(){
+        return "/main/sponsor";
+    }
+
+    @GetMapping( "/integrated")
+    public String go2Integrated(){
+        return "/main/integrated";
+    }
+
+    @GetMapping( "/")
+    public String root() {
+        return "/main/index";
+    }
+
+
 }

@@ -3,10 +3,14 @@ package cn.keking.service.impl;
 import cn.keking.config.ConfigConstants;
 import cn.keking.model.FileAttribute;
 import cn.keking.model.ReturnResponse;
+import cn.keking.service.FileHandlerService;
 import cn.keking.service.FilePreview;
 import cn.keking.utils.DownloadUtils;
-import cn.keking.service.FileHandlerService;
+import cn.keking.utils.KkFileUtils;
+import cn.keking.utils.WebUtils;
 import cn.keking.web.filter.BaseUrlFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -20,9 +24,9 @@ import static cn.keking.service.impl.OfficeFilePreviewImpl.getPreviewType;
 @Service
 public class CadFilePreviewImpl implements FilePreview {
 
+    private static final Logger logger = LoggerFactory.getLogger(CadFilePreviewImpl.class);
     private static final String OFFICE_PREVIEW_TYPE_IMAGE = "image";
     private static final String OFFICE_PREVIEW_TYPE_ALL_IMAGES = "allImages";
-    private static final String FILE_DIR = ConfigConstants.getFileDir();
 
     private final FileHandlerService fileHandlerService;
     private final OtherFilePreviewImpl otherFilePreview;
@@ -37,34 +41,50 @@ public class CadFilePreviewImpl implements FilePreview {
         // 预览Type，参数传了就取参数的，没传取系统默认
         String officePreviewType = fileAttribute.getOfficePreviewType() == null ? ConfigConstants.getOfficePreviewType() : fileAttribute.getOfficePreviewType();
         String baseUrl = BaseUrlFilter.getBaseUrl();
+        boolean forceUpdatedCache = fileAttribute.forceUpdatedCache();
         String fileName = fileAttribute.getName();
-        String pdfName = fileName.substring(0, fileName.lastIndexOf(".") + 1) + "pdf";
-        String outFilePath = FILE_DIR + pdfName;
+        String cadPreviewType = ConfigConstants.getCadPreviewType();
+        String cacheName = fileAttribute.getCacheName();
+        String outFilePath = fileAttribute.getOutFilePath();
         // 判断之前是否已转换过，如果转换过，直接返回，否则执行转换
-        if (!fileHandlerService.listConvertedFiles().containsKey(pdfName) || !ConfigConstants.isCacheEnabled()) {
-            String filePath;
-            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, null);
+        if (forceUpdatedCache || !fileHandlerService.listConvertedFiles().containsKey(cacheName) || !ConfigConstants.isCacheEnabled()) {
+            ReturnResponse<String> response = DownloadUtils.downLoad(fileAttribute, fileName);
             if (response.isFailure()) {
                 return otherFilePreview.notSupportedFile(model, fileAttribute, response.getMsg());
             }
-            filePath = response.getContent();
+            String filePath = response.getContent();
+            String imageUrls = null;
             if (StringUtils.hasText(outFilePath)) {
-                boolean convertResult = fileHandlerService.cadToPdf(filePath, outFilePath);
-                if (!convertResult) {
-                    return otherFilePreview.notSupportedFile(model, fileAttribute, "cad文件转换异常，请联系管理员");
+                try {
+                    imageUrls = fileHandlerService.cadToPdf(filePath, outFilePath, cadPreviewType, fileAttribute);
+                } catch (Exception e) {
+                    logger.error("Failed to convert CAD file: {}", filePath, e);
+                }
+                if (imageUrls == null) {
+                    return otherFilePreview.notSupportedFile(model, fileAttribute, "CAD转换异常，请联系管理员");
+                }
+                //是否保留CAD源文件
+                if (!fileAttribute.isCompressFile() && ConfigConstants.getDeleteSourceFile()) {
+                    KkFileUtils.deleteFileByPath(filePath);
                 }
                 if (ConfigConstants.isCacheEnabled()) {
                     // 加入缓存
-                    fileHandlerService.addConvertedFile(pdfName, fileHandlerService.getRelativePath(outFilePath));
+                    fileHandlerService.addConvertedFile(cacheName, fileHandlerService.getRelativePath(outFilePath));
                 }
             }
         }
-        if (baseUrl != null && (OFFICE_PREVIEW_TYPE_IMAGE.equals(officePreviewType) || OFFICE_PREVIEW_TYPE_ALL_IMAGES.equals(officePreviewType))) {
-            return getPreviewType(model, fileAttribute, officePreviewType, baseUrl, pdfName, outFilePath, fileHandlerService, OFFICE_PREVIEW_TYPE_IMAGE,otherFilePreview);
+        cacheName=  WebUtils.encodeFileName(cacheName);
+        if ("tif".equalsIgnoreCase(cadPreviewType)) {
+            model.addAttribute("currentUrl", cacheName);
+            return TIFF_FILE_PREVIEW_PAGE;
+        } else if ("svg".equalsIgnoreCase(cadPreviewType)) {
+            model.addAttribute("currentUrl", cacheName);
+            return SVG_FILE_PREVIEW_PAGE;
         }
-        model.addAttribute("pdfUrl", pdfName);
+        if (baseUrl != null && (OFFICE_PREVIEW_TYPE_IMAGE.equals(officePreviewType) || OFFICE_PREVIEW_TYPE_ALL_IMAGES.equals(officePreviewType))) {
+            return getPreviewType(model, fileAttribute, officePreviewType, cacheName, outFilePath, fileHandlerService, OFFICE_PREVIEW_TYPE_IMAGE, otherFilePreview);
+        }
+        model.addAttribute("pdfUrl", cacheName);
         return PDF_FILE_PREVIEW_PAGE;
     }
-
-
 }

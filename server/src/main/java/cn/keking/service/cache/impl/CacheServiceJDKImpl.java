@@ -3,11 +3,11 @@ package cn.keking.service.cache.impl;
 import cn.keking.service.cache.CacheService;
 import com.googlecode.concurrentlinkedhashmap.ConcurrentLinkedHashMap;
 import com.googlecode.concurrentlinkedhashmap.Weighers;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +101,7 @@ public class CacheServiceJDKImpl implements CacheService {
         initPDFCachePool(CacheService.DEFAULT_PDF_CAPACITY);
         initIMGCachePool(CacheService.DEFAULT_IMG_CAPACITY);
         initPdfImagesCachePool(CacheService.DEFAULT_PDFIMG_CAPACITY);
+        initMediaConvertCachePool(CacheService.DEFAULT_MEDIACONVERT_CAPACITY);
     }
 
     @Override
